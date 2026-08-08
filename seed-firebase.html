@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seed Firebase – RA Modas</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    h1 { font-size: 1.4rem; margin-bottom: 8px; color: #f0c040; }
+    p  { font-size: .9rem; color: #aaa; margin-bottom: 24px; text-align: center; max-width: 480px; }
+    #btn { padding: 14px 36px; background: #f0c040; color: #000; font-size: 1rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: opacity .2s; }
+    #btn:disabled { opacity: .45; cursor: not-allowed; }
+    #log  { margin-top: 24px; width: 100%; max-width: 540px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 16px; font-size: .8rem; font-family: monospace; max-height: 360px; overflow-y: auto; }
+    .ok   { color: #4caf50; }
+    .err  { color: #f44336; }
+    .info { color: #90caf9; }
+  </style>
+</head>
+<body>
+
+<h1>🔥 Seed de Produtos – RA Modas</h1>
+<p>Clique no botão abaixo para enviar todos os produtos, categorias e o cupom padrão ao Firestore do Firebase. Execute <strong>apenas uma vez</strong>. Se rodar novamente, usará <code>set</code> com o mesmo ID (não duplica).</p>
+
+<button id="btn">🚀 Enviar Produtos ao Firebase</button>
+
+<div id="log"><span class="info">Aguardando…</span></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+// TODO: preencher com as credenciais do Firebase deste projeto
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+
+const produtos = [
+  { id: 1, nome: "Blusa Crepe",                          categoria: "blusas",      preco: 59.00,  imagem: "./assets/blusa-feminia1.jpeg",          descricao: "Blusa Feminina Crepe Manga 3/4 Off White / PP" },
+  { id: 2, nome: "Blusa Manga Longa de Renda",            categoria: "blusas",      preco: 90.00,  imagem: "./assets/blusa-feminina2.jpeg",         descricao: "Blusa Feminina Manga Longa De Renda Branco / PP" },
+  { id: 3, nome: "Calça Feminina Jogger",                 categoria: "calças",      preco: 150.00, imagem: "./assets/calça-feminina.jpeg",          descricao: "Calça Feminina Jogger Com Elástico Liocel Bege" },
+  { id: 4, nome: "Calça Feminina Pantalona",               categoria: "calças",      preco: 120.00, imagem: "./assets/Calça-Feminina-Pantalona.png",  descricao: "Calça Feminina Pantalona Estampada Lunender" },
+  { id: 5, nome: "Shorts Feminino",                        categoria: "shorts",      preco: 32.99,  imagem: "./assets/short-feminino.webp",          descricao: "Shorts Feminino Confortável e Estiloso" },
+  { id: 6, nome: "Short Jeans Cintura Alta",                categoria: "shorts",      preco: 499,    imagem: "./assets/Short Jeans.jpeg",             descricao: "Short Jeans Bermuda Feminino Luxo Cintura Alta" },
+  { id: 7, nome: "Conjunto Brilhante",                      categoria: "acessórios", preco: 24.99,  imagem: "./assets/conjunto.jpeg",                descricao: "Fone com cancelamento de ruído" },
+  { id: 8, nome: "Tênis Feminino Branco Rose",              categoria: "calçados",   preco: 79.99,  imagem: "./assets/Tênis.webp",                   descricao: "Tênis Feminino Branco Rose" },
+];
+
+const categorias = [
+  { id: "all",         nome: "Todos",       icone: "fa-border-all" },
+  { id: "blusas",      nome: "Blusas",      icone: "fa-shirt" },
+  { id: "calças",      nome: "Calças",      icone: "fa-user" },
+  { id: "shorts",      nome: "Shorts",      icone: "fa-person-running" },
+  { id: "acessórios",  nome: "Acessórios",  icone: "fa-gem" },
+  { id: "calçados",    nome: "Calçados",    icone: "fa-shoe-prints" },
+];
+
+const cupons = [
+  { codigo: "DESCONTO10", tipo: "percentual", valor: 10, valorMinimo: 0, validade: null, ativo: true },
+];
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const log = document.getElementById("log");
+const btn = document.getElementById("btn");
+
+const addLog = (msg, tipo = "ok") => {
+  const span = document.createElement("span");
+  span.className = tipo;
+  span.textContent = msg;
+  log.appendChild(span);
+  log.appendChild(document.createElement("br"));
+  log.scrollTop = log.scrollHeight;
+};
+
+btn.addEventListener("click", async () => {
+  btn.disabled = true;
+  log.innerHTML = "";
+  addLog("▶ Iniciando envio...", "info");
+
+  let ok = 0, erros = 0;
+
+  for (const p of produtos) {
+    try {
+      await db.collection("produtos").doc(String(p.id)).set({
+        ...p,
+        ativo: true,
+        destaque: false,
+        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      addLog(`✔ [${p.id}] ${p.nome}`, "ok");
+      ok++;
+    } catch (e) {
+      addLog(`✘ [${p.id}] ${p.nome} — ${e.message}`, "err");
+      erros++;
+    }
+  }
+
+  addLog("", "info");
+  addLog("▶ Enviando categorias...", "info");
+  for (const c of categorias) {
+    try {
+      await db.collection("categorias").doc(c.id).set(c);
+      addLog(`✔ Categoria: ${c.nome}`, "ok");
+    } catch (e) {
+      addLog(`✘ Categoria: ${c.nome} — ${e.message}`, "err");
+      erros++;
+    }
+  }
+
+  addLog("", "info");
+  addLog("▶ Enviando cupons...", "info");
+  for (const c of cupons) {
+    try {
+      await db.collection("cupons").add(c);
+      addLog(`✔ Cupom: ${c.codigo}`, "ok");
+    } catch (e) {
+      addLog(`✘ Cupom: ${c.codigo} — ${e.message}`, "err");
+      erros++;
+    }
+  }
+
+  addLog("", "info");
+  addLog(`━━━ CONCLUÍDO: ${ok} produtos enviados, ${erros} erros ━━━`, erros > 0 ? "err" : "info");
+  btn.disabled = false;
+});
+</script>
+</body>
+</html>

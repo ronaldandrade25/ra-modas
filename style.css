@@ -239,3 +239,21 @@ footer{background:#18061a;color:#fff;text-align:center;padding:2rem}
 }
 /* Esconde a barra "Ver Carrinho" em telas maiores */
 @media (min-width:769px){.view-cart-banner{display:none}}
+
+/* Banner do cabeçalho (opcional, definido pelo admin em Configurações) */
+header.header--banner {
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+}
+header.header--banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(0,0,0,.6), rgba(0,0,0,.3), rgba(0,0,0,.1));
+    z-index: 0;
+}
+header.header--banner > * {
+    position: relative;
+    z-index: 1;
+}

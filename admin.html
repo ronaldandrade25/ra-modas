@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – RA Modas</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg:      #0d0d0d;
+      --surface: #161616;
+      --card:    #1e1e1e;
+      --border:  #2a2a2a;
+      --gold:    #f0c040;
+      --gold2:   #c99a20;
+      --text:    #e8e8e8;
+      --muted:   #888;
+      --red:     #f44336;
+      --green:   #4caf50;
+      --blue:    #2196f3;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 16px; }
+    #login-screen h1 { font-size: 1.6rem; color: var(--gold); }
+    #login-screen p  { color: var(--muted); font-size: .9rem; }
+    .login-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; width: 320px; display: flex; flex-direction: column; gap: 14px; }
+    .login-box input { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; color: var(--text); font-size: .95rem; outline: none; }
+    .login-box input:focus { border-color: var(--gold); }
+    #login-error { color: var(--red); font-size: .82rem; display: none; }
+    #app { display: none; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar-brand { font-weight: 700; font-size: 1.05rem; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+    .topbar-right  { display: flex; align-items: center; gap: 12px; }
+    .logout-btn { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: .82rem; transition: .2s; }
+    .logout-btn:hover { border-color: var(--red); color: var(--red); }
+    .app-body { display: flex; align-items: flex-start; }
+    .sidebar { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 16px 10px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; }
+    .side-btn { display: flex; align-items: center; gap: 12px; text-align: left; background: none; border: none; color: var(--muted); padding: 12px 14px; border-radius: 8px; cursor: pointer; font-size: .88rem; transition: .2s; width: 100%; }
+    .side-btn i { width: 18px; text-align: center; font-size: .95rem; }
+    .side-btn:hover { background: var(--card); color: var(--text); }
+    .side-btn.active { background: #2a2205; color: var(--gold); font-weight: 600; }
+    .content { padding: 24px; flex: 1; min-width: 0; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    @media (max-width: 800px) {
+      .app-body { flex-direction: column; }
+      .sidebar { width: 100%; flex-direction: row; overflow-x: auto; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border); }
+      .side-btn { width: auto; white-space: nowrap; }
+    }
+    .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+    .toolbar input[type=text], .toolbar input[type=month], .toolbar select { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: var(--text); font-size: .88rem; outline: none; }
+    .toolbar input[type=month]::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
+    .toolbar input[type=text] { flex: 1; min-width: 180px; }
+    .toolbar input:focus, .toolbar select:focus { border-color: var(--gold); }
+    .toolbar select option { background: var(--card); }
+    .btn { padding: 9px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: .88rem; font-weight: 600; transition: .15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary  { background: var(--gold); color: #000; }
+    .btn-primary:hover  { background: var(--gold2); }
+    .btn-danger   { background: #2a1010; color: var(--red); border: 1px solid #4a1010; }
+    .btn-danger:hover   { background: #3a1515; }
+    .btn-ghost    { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover    { border-color: var(--gold); color: var(--gold); }
+    .btn-sm { padding: 5px 10px; font-size: .78rem; border-radius: 6px; }
+    .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; flex: 1; min-width: 140px; }
+    .stat-card .num { font-size: 1.6rem; font-weight: 700; color: var(--gold); }
+    .stat-card .lbl { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: var(--surface); }
+    th { padding: 11px 14px; text-align: left; font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+    td { padding: 10px 14px; border-top: 1px solid var(--border); font-size: .85rem; vertical-align: middle; }
+    tr:hover td { background: #1a1a1a; }
+    .prod-img { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+    .prod-img-placeholder { width: 44px; height: 44px; background: var(--surface); border-radius: 6px; border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: .7rem; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: .72rem; font-weight: 600; }
+    .badge-ativo    { background: #0e2e18; color: var(--green); }
+    .badge-inativo  { background: #2a1010; color: var(--red); }
+    .badge-destaque { background: #2a1f00; color: var(--gold); }
+    .actions-cell { display: flex; gap: 6px; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--card); border: 1px solid var(--border); border-radius: 14px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; padding: 28px; position: relative; }
+    .modal h2 { font-size: 1.1rem; margin-bottom: 20px; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; transition: .2s; }
+    .modal-close:hover { color: var(--text); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: .8rem; color: var(--muted); }
+    .form-group input, .form-group select, .form-group textarea { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: .88rem; outline: none; font-family: inherit; }
+    .form-group input[type=color] { width: 64px; height: 40px; padding: 3px; cursor: pointer; }
+    .form-group textarea { resize: vertical; min-height: 72px; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--gold); }
+    .form-group select option { background: var(--card); }
+    .toggle-row { display: flex; align-items: center; gap: 8px; font-size: .85rem; }
+    .toggle-row input[type=checkbox] { accent-color: var(--gold); width: 16px; height: 16px; cursor: pointer; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+    #confirm-modal .modal { width: 360px; }
+    #confirm-modal p { font-size: .9rem; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .cat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .cat-card-left { display: flex; align-items: center; gap: 10px; }
+    .cat-icon { width: 36px; height: 36px; background: var(--surface); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: .9rem; }
+    .cat-name { font-size: .9rem; font-weight: 600; }
+    .cat-id   { font-size: .75rem; color: var(--muted); }
+    #toast { position: fixed; bottom: 24px; right: 24px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; font-size: .88rem; z-index: 9999; transform: translateY(80px); opacity: 0; transition: .3s; max-width: 320px; display: flex; align-items: center; gap: 10px; }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.ok  { border-color: var(--green); color: var(--green); }
+    #toast.err { border-color: var(--red);   color: var(--red);   }
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+    .empty-state i { font-size: 2rem; margin-bottom: 12px; display: block; }
+    .loader { text-align: center; padding: 40px; color: var(--muted); }
+    .loader i { font-size: 1.4rem; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* ── UPLOAD DE IMAGEM ── */
+    .img-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+    .upload-btn-area { background: var(--surface); border: 2px dashed var(--border); border-radius: 8px; padding: 18px; text-align: center; cursor: pointer; transition: .2s; color: var(--muted); font-size: .88rem; }
+    .upload-btn-area:hover { border-color: var(--gold); color: var(--gold); }
+    .upload-preview { margin-top: 10px; display: none; }
+    .upload-preview img { width: 100%; max-height: 160px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border); }
+    .upload-preview p { font-size: .75rem; color: var(--muted); margin-top: 6px; text-align: center; }
+    .progress-bar { display: none; margin-top: 8px; background: var(--border); border-radius: 999px; height: 6px; }
+    .progress-fill { height: 6px; background: var(--gold); border-radius: 999px; width: 0%; transition: width .3s; }
+    /* ── PDV ── */
+    .pdv-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+    .pdv-products { min-width: 0; }
+    .pdv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-height: 62vh; overflow-y: auto; margin-top: 14px; padding-right: 4px; }
+    .pdv-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px; cursor: pointer; text-align: center; transition: .15s; }
+    .pdv-item:hover { border-color: var(--gold); transform: translateY(-1px); }
+    .pdv-item img, .pdv-item .pdv-item-noimg { width: 100%; height: 74px; object-fit: contain; margin-bottom: 8px; border-radius: 6px; }
+    .pdv-item .pdv-item-noimg { background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--muted); border: 1px dashed var(--border); }
+    .pdv-item-nome { font-size: .78rem; font-weight: 600; line-height: 1.25; height: 2.5em; overflow: hidden; }
+    .pdv-item-preco { font-size: .82rem; color: var(--gold); font-weight: 700; margin-top: 4px; }
+    .pdv-cart { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px; position: sticky; top: 76px; max-height: calc(100vh - 100px); overflow-y: auto; }
+    .pdv-cart h3 { font-size: 1rem; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+    .pdv-cart-empty { text-align: center; color: var(--muted); font-size: .85rem; padding: 24px 0; }
+    .pdv-cart-item { display: flex; align-items: center; gap: 8px; font-size: .82rem; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .pdv-cart-item-info { flex: 1; min-width: 0; }
+    .pdv-cart-item-nome { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pdv-cart-item-preco { color: var(--muted); font-size: .76rem; }
+    .pdv-qty { display: flex; align-items: center; gap: 6px; }
+    .pdv-qty-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: .8rem; line-height: 1; }
+    .pdv-qty-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .pdv-cart-item-total { font-weight: 700; color: var(--gold); min-width: 62px; text-align: right; }
+    .pdv-remove-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: .85rem; padding: 4px; }
+    .pdv-totals-row { display: flex; justify-content: space-between; font-size: .85rem; color: var(--muted); }
+    .pdv-totals-row.total { font-size: 1.1rem; font-weight: 700; color: var(--gold); border-top: 1px solid var(--border); padding-top: 10px; margin-top: 2px; }
+    #pdv-busca { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: var(--text); font-size: .88rem; outline: none; }
+    #pdv-busca:focus { border-color: var(--gold); }
+    .pdv-cupom-row { display: flex; gap: 8px; }
+    .pdv-cupom-row input { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: .88rem; outline: none; }
+    .pdv-cupom-row input:focus { border-color: var(--gold); }
+    .pdv-cupom-row input::placeholder { color: var(--muted); }
+    .pdv-history { margin-top: 28px; }
+    .pdv-history h3 { font-size: 1rem; color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    @media (max-width: 900px) { .pdv-layout { grid-template-columns: 1fr; } .pdv-cart { position: static; max-height: none; } }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } .stats-row .stat-card { min-width: 100px; } .modal { padding: 20px; } }
+  </style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div style="text-align:center">
+    <i class="fa-solid fa-shield-halved" style="font-size:2.2rem;color:var(--gold);margin-bottom:10px;display:block"></i>
+    <h1>RA Modas Admin</h1>
+    <p style="margin-top:6px">Acesso restrito</p>
+  </div>
+  <div class="login-box">
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="email-input" placeholder="seuemail@exemplo.com" autofocus>
+    </div>
+    <div class="form-group">
+      <label>Senha de acesso</label>
+      <input type="password" id="senha-input" placeholder="••••••••">
+    </div>
+    <span id="login-error">E-mail ou senha inválidos.</span>
+    <button class="btn btn-primary" onclick="fazerLogin()">
+      <i class="fa-solid fa-right-to-bracket"></i> Entrar
+    </button>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand"><i class="fa-solid fa-bag-shopping"></i> RA Modas Admin</div>
+    <div class="topbar-right">
+      <span style="font-size:.8rem;color:var(--muted)" id="topbar-count"></span>
+      <button class="logout-btn" onclick="fazerLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+  <div class="sidebar">
+    <button class="side-btn active" onclick="mudarTab('produtos',this)"><i class="fa-solid fa-box"></i> Produtos</button>
+    <button class="side-btn" onclick="mudarTab('categorias',this)"><i class="fa-solid fa-tags"></i> Categorias</button>
+    <button class="side-btn" onclick="mudarTab('cupons',this)"><i class="fa-solid fa-ticket"></i> Cupons</button>
+    <button class="side-btn" onclick="mudarTab('pdv',this)"><i class="fa-solid fa-cash-register"></i> PDV</button>
+    <button class="side-btn" onclick="mudarTab('relatorio',this)"><i class="fa-solid fa-chart-column"></i> Relatório</button>
+    <button class="side-btn" onclick="mudarTab('config',this)"><i class="fa-solid fa-gear"></i> Configurações</button>
+  </div>
+
+  <div class="content">
+    <div id="tab-produtos" class="tab-panel active">
+      <div class="stats-row">
+        <div class="stat-card"><div class="num" id="stat-total">–</div><div class="lbl">Total de produtos</div></div>
+        <div class="stat-card"><div class="num" id="stat-ativos">–</div><div class="lbl">Ativos</div></div>
+        <div class="stat-card"><div class="num" id="stat-destaque">–</div><div class="lbl">Destaques</div></div>
+        <div class="stat-card"><div class="num" id="stat-cats">–</div><div class="lbl">Categorias</div></div>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="busca-input" placeholder="🔍 Buscar produto..." oninput="filtrar()">
+        <select id="filtro-cat" onchange="filtrar()"><option value="">Todas categorias</option></select>
+        <select id="filtro-status" onchange="filtrar()">
+          <option value="">Todos status</option>
+          <option value="ativo">Ativos</option>
+          <option value="inativo">Inativos</option>
+          <option value="destaque">Destaques</option>
+        </select>
+        <button class="btn btn-primary" onclick="abrirModalCriar()"><i class="fa-solid fa-plus"></i> Novo Produto</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Imagem</th><th>ID</th><th>Nome</th><th>Categoria</th><th>Preço</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="tabela-corpo"><tr><td colspan="7"><div class="loader"><i class="fa-solid fa-spinner"></i> Carregando...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-categorias" class="tab-panel">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="abrirModalCategoria()"><i class="fa-solid fa-plus"></i> Nova Categoria</button>
+      </div>
+      <div class="cat-grid" id="cat-grid"><div class="loader"><i class="fa-solid fa-spinner"></i> Carregando...</div></div>
+    </div>
+
+    <div id="tab-cupons" class="tab-panel">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="abrirModalCupom()"><i class="fa-solid fa-plus"></i> Novo Cupom</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Código</th><th>Tipo</th><th>Valor</th><th>Pedido mínimo</th><th>Validade</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="cupons-tabela-corpo"><tr><td colspan="7"><div class="loader"><i class="fa-solid fa-spinner"></i> Carregando...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-pdv" class="tab-panel">
+      <div class="stats-row">
+        <div class="stat-card"><div class="num" id="pdv-stat-qtd">–</div><div class="lbl">Vendas hoje</div></div>
+        <div class="stat-card"><div class="num" id="pdv-stat-total">–</div><div class="lbl">Total vendido hoje</div></div>
+      </div>
+      <div class="pdv-layout">
+        <div class="pdv-products">
+          <input type="text" id="pdv-busca" placeholder="🔍 Buscar produto" oninput="renderPdvGrid()">
+          <div class="pdv-grid" id="pdv-grid"></div>
+        </div>
+        <div class="pdv-cart">
+          <h3><i class="fa-solid fa-cart-shopping"></i> Venda atual</h3>
+          <div id="pdv-cart-items"><div class="pdv-cart-empty">Carrinho vazio. Clique em um produto para adicionar.</div></div>
+          <div class="pdv-cupom-row">
+            <input type="text" id="pdv-cupom-input" placeholder="Código do cupom" style="text-transform:uppercase">
+            <button class="btn btn-ghost btn-sm" onclick="pdvAplicarCupom()">Aplicar</button>
+          </div>
+          <div class="form-group">
+            <label>Desconto manual (R$)</label>
+            <input type="number" id="pdv-desconto-manual" min="0" step="0.01" placeholder="0.00" oninput="renderPdvCart()">
+          </div>
+          <div class="form-group">
+            <label>Forma de pagamento</label>
+            <select id="pdv-pagamento">
+              <option value="dinheiro">Dinheiro</option>
+              <option value="pix">Pix</option>
+              <option value="debito">Cartão de débito</option>
+              <option value="credito">Cartão de crédito</option>
+            </select>
+          </div>
+          <label class="toggle-row"><input type="checkbox" id="pdv-pagamento-dividir" onchange="pdvTogglePagamentoDividido()"> Dividir em 2 formas de pagamento</label>
+          <div id="pdv-pagamento2-area" style="display:none;flex-direction:column;gap:12px">
+            <div class="form-group">
+              <label>2ª forma de pagamento</label>
+              <select id="pdv-pagamento2">
+                <option value="dinheiro">Dinheiro</option>
+                <option value="pix">Pix</option>
+                <option value="debito">Cartão de débito</option>
+                <option value="credito" selected>Cartão de crédito</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Valor pago na 2ª forma (R$)</label>
+              <input type="number" id="pdv-valor-pagamento2" min="0" step="0.01" placeholder="0.00" oninput="renderPdvCart()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Cliente (opcional)</label>
+            <input type="text" id="pdv-cliente" placeholder="Nome do cliente">
+          </div>
+          <div class="pdv-totals-row"><span>Subtotal</span><span id="pdv-subtotal">R$ 0,00</span></div>
+          <div class="pdv-totals-row"><span>Desconto</span><span id="pdv-desconto-total">R$ 0,00</span></div>
+          <div class="pdv-totals-row total"><span>Total</span><span id="pdv-total">R$ 0,00</span></div>
+          <div id="pdv-split-resumo" style="display:none;flex-direction:column;gap:4px"></div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="pdvFinalizarVenda()"><i class="fa-solid fa-check"></i> Finalizar Venda</button>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="pdvLimparCarrinho()"><i class="fa-solid fa-eraser"></i> Limpar carrinho</button>
+        </div>
+      </div>
+      <div class="pdv-history">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Vendas de hoje</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Horário</th><th>Cliente</th><th>Itens</th><th>Pagamento</th><th>Total</th><th>Ações</th></tr></thead>
+            <tbody id="pdv-vendas-tabela"><tr><td colspan="6"><div class="loader"><i class="fa-solid fa-spinner"></i> Carregando...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-relatorio" class="tab-panel">
+      <div class="toolbar">
+        <input type="month" id="relatorio-mes" onchange="carregarRelatorio()">
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="num" id="relatorio-stat-qtd">–</div><div class="lbl">Vendas no mês</div></div>
+        <div class="stat-card"><div class="num" id="relatorio-stat-total">–</div><div class="lbl">Faturamento no mês</div></div>
+        <div class="stat-card"><div class="num" id="relatorio-stat-ticket">–</div><div class="lbl">Ticket médio</div></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>Hora</th><th>Cliente</th><th>Itens</th><th>Pagamento</th><th>Total</th><th>Ações</th></tr></thead>
+          <tbody id="relatorio-tabela"><tr><td colspan="7"><div class="loader"><i class="fa-solid fa-spinner"></i> Carregando...</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-config" class="tab-panel">
+      <div class="form-grid" style="max-width:640px">
+        <div class="form-group full">
+          <label>Nome da loja</label>
+          <input type="text" id="config-nome-loja" placeholder="Ex: RA Modas">
+        </div>
+        <div class="form-group full">
+          <label>WhatsApp para receber pedidos <small style="color:var(--muted)">(DDI + DDD + número, só números, ex: 5581999999999)</small></label>
+          <input type="text" id="config-whatsapp" placeholder="5581999999999">
+        </div>
+        <div class="form-group full">
+          <label>Dias disponíveis para retirada</label>
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <label class="toggle-row"><input type="checkbox" id="config-dia-0"> Dom</label>
+            <label class="toggle-row"><input type="checkbox" id="config-dia-1"> Seg</label>
+            <label class="toggle-row"><input type="checkbox" id="config-dia-2"> Ter</label>
+            <label class="toggle-row"><input type="checkbox" id="config-dia-3"> Qua</label>
+            <label class="toggle-row"><input type="checkbox" id="config-dia-4"> Qui</label>
+            <label class="toggle-row"><input type="checkbox" id="config-dia-5"> Sex</label>
+            <label class="toggle-row"><input type="checkbox" id="config-dia-6"> Sáb</label>
+          </div>
+        </div>
+        <div class="form-group"><label>Horário inicial da retirada</label><input type="time" id="config-hora-inicio"></div>
+        <div class="form-group"><label>Horário final da retirada</label><input type="time" id="config-hora-fim"></div>
+        <div class="form-group"><label>Intervalo entre horários (minutos)</label><input type="number" id="config-intervalo" min="15" step="15" placeholder="60"></div>
+
+        <div class="form-group full">
+          <label>Banner do topo do site</label>
+          <div class="img-tabs">
+            <button type="button" id="config-tab-banner-url" class="btn btn-primary btn-sm" onclick="alternarAbaImagemBanner('url')">
+              <i class="fa-solid fa-link"></i> Colar URL
+            </button>
+            <button type="button" id="config-tab-banner-upload" class="btn btn-ghost btn-sm" onclick="alternarAbaImagemBanner('upload')">
+              <i class="fa-solid fa-camera"></i> Upload / Câmera
+            </button>
+          </div>
+          <div id="config-banner-url-area">
+            <input type="text" id="config-banner-imagem" placeholder="https://... ou ./assets/banner.jpg">
+          </div>
+          <div id="config-banner-upload-area" style="display:none">
+            <input type="file" id="config-banner-imagem-file" accept="image/*" style="display:none">
+            <div class="upload-btn-area" onclick="document.getElementById('config-banner-imagem-file').click()">
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.4rem;margin-bottom:6px;display:block"></i>
+              Clique para selecionar uma imagem<br>
+              <span style="font-size:.78rem">ou tirar foto pela câmera do celular</span>
+            </div>
+            <div class="upload-preview" id="config-banner-upload-preview">
+              <img id="config-banner-upload-preview-img" src="" alt="preview">
+              <p id="config-banner-upload-filename"></p>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <p style="font-size:.75rem;color:var(--muted);margin-bottom:6px">Banner atual:</p>
+            <img id="config-banner-preview-atual" src="" alt="banner atual" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:none">
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label>Cores do site</label>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:4px">
+            <div class="form-group">
+              <label style="font-size:.75rem">Cor primária <small style="color:var(--muted)">(botões e destaques)</small></label>
+              <input type="color" id="config-cor-primaria" value="#D6336C">
+            </div>
+            <div class="form-group">
+              <label style="font-size:.75rem">Cor secundária <small style="color:var(--muted)">(fundos escuros)</small></label>
+              <input type="color" id="config-cor-secundaria" value="#4A154B">
+            </div>
+            <div class="form-group">
+              <label style="font-size:.75rem">Cor de destaque <small style="color:var(--muted)">(categoria ativa)</small></label>
+              <input type="color" id="config-cor-destaque" value="#FF8FB3">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:flex-start;margin-top:20px">
+        <button class="btn btn-primary" onclick="salvarConfiguracoes()"><i class="fa-solid fa-floppy-disk"></i> Salvar Configurações</button>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- MODAL PRODUTO -->
+<div class="modal-overlay" id="modal-produto">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal('modal-produto')">&times;</button>
+    <h2 id="modal-titulo"><i class="fa-solid fa-box"></i> Produto</h2>
+    <div class="form-grid">
+      <input type="hidden" id="form-id">
+      <div class="form-group full"><label>Nome do produto *</label><input type="text" id="form-nome" placeholder="Ex: Blusa Crepe"></div>
+      <div class="form-group"><label>Categoria *</label><select id="form-categoria"><option value="">Selecione...</option></select></div>
+      <div class="form-group"><label>Preço (R$) *</label><input type="number" id="form-preco" placeholder="0.00" step="0.01" min="0"></div>
+
+      <!-- CAMPO DE IMAGEM COM UPLOAD -->
+      <div class="form-group full">
+        <label>Imagem do produto</label>
+        <div class="img-tabs">
+          <button type="button" id="tab-url" class="btn btn-primary btn-sm" onclick="alternarAbaImagem('url')">
+            <i class="fa-solid fa-link"></i> Colar URL
+          </button>
+          <button type="button" id="tab-upload" class="btn btn-ghost btn-sm" onclick="alternarAbaImagem('upload')">
+            <i class="fa-solid fa-camera"></i> Upload / Câmera
+          </button>
+        </div>
+        <div id="img-url-area">
+          <input type="text" id="form-imagem" placeholder="https://... ou ./assets/produto.jpg">
+        </div>
+        <div id="img-upload-area" style="display:none">
+          <input type="file" id="form-imagem-file" accept="image/*" style="display:none">
+          <div class="upload-btn-area" onclick="document.getElementById('form-imagem-file').click()">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.4rem;margin-bottom:6px;display:block"></i>
+            Clique para selecionar uma imagem<br>
+            <span style="font-size:.78rem">ou tirar foto pela câmera do celular</span>
+          </div>
+          <div class="upload-preview" id="upload-preview">
+            <img id="upload-preview-img" src="" alt="preview">
+            <p id="upload-filename"></p>
+          </div>
+          <div class="progress-bar" id="upload-progress-bar">
+            <div class="progress-fill" id="upload-progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group full"><label>Descrição</label><textarea id="form-descricao" placeholder="Descrição, tamanhos disponíveis, cor..."></textarea></div>
+      <div class="form-group full" style="flex-direction:row;gap:20px;align-items:center">
+        <label class="toggle-row"><input type="checkbox" id="form-ativo" checked> Produto ativo (visível na loja)</label>
+        <label class="toggle-row"><input type="checkbox" id="form-destaque"> Destaque</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-produto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarProduto()"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATEGORIA -->
+<div class="modal-overlay" id="modal-categoria">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal('modal-categoria')">&times;</button>
+    <h2><i class="fa-solid fa-tag"></i> Categoria</h2>
+    <div class="form-grid">
+      <input type="hidden" id="cat-id-original">
+      <div class="form-group full"><label>Nome da categoria *</label><input type="text" id="cat-nome" placeholder="Ex: Blusas"></div>
+      <div class="form-group full"><label>ID interno * <small style="color:var(--muted)">(sem espaços, ex: blusas)</small></label><input type="text" id="cat-id" placeholder="blusas"></div>
+      <div class="form-group full"><label>Ícone Font Awesome <small style="color:var(--muted)">(ex: fa-shirt)</small></label><input type="text" id="cat-icone" placeholder="fa-tag"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-categoria')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCategoria()"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CUPOM -->
+<div class="modal-overlay" id="modal-cupom">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal('modal-cupom')">&times;</button>
+    <h2 id="cupom-modal-titulo"><i class="fa-solid fa-ticket"></i> Cupom</h2>
+    <div class="form-grid">
+      <input type="hidden" id="cupom-doc-id">
+      <div class="form-group full"><label>Código do cupom *</label><input type="text" id="cupom-codigo" placeholder="Ex: DESCONTO10" style="text-transform:uppercase"></div>
+      <div class="form-group">
+        <label>Tipo de desconto *</label>
+        <select id="cupom-tipo">
+          <option value="percentual">Percentual (%)</option>
+          <option value="fixo">Valor fixo (R$)</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Valor *</label><input type="number" id="cupom-valor" placeholder="0.00" step="0.01" min="0"></div>
+      <div class="form-group"><label>Pedido mínimo (R$)</label><input type="number" id="cupom-valor-minimo" placeholder="0.00" step="0.01" min="0"></div>
+      <div class="form-group"><label>Validade (opcional)</label><input type="date" id="cupom-validade"></div>
+      <div class="form-group full" style="flex-direction:row;gap:20px;align-items:center">
+        <label class="toggle-row"><input type="checkbox" id="cupom-ativo" checked> Cupom ativo</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-cupom')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCupom()"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal('confirm-modal')">&times;</button>
+    <h2><i class="fa-solid fa-triangle-exclamation" style="color:var(--red)"></i> Confirmar exclusão</h2>
+    <p id="confirm-msg">Tem certeza que deseja excluir este item?</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('confirm-modal')">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok-btn"><i class="fa-solid fa-trash"></i> Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script>
+// TODO: preencher com as credenciais do Firebase deste projeto
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+
+// ── LOGIN ──────────────────────────────────────────────────────────────────
+function fazerLogin() {
+  const email = document.getElementById("email-input").value.trim();
+  const senha = document.getElementById("senha-input").value;
+  const err   = document.getElementById("login-error");
+  err.style.display = "none";
+  auth.signInWithEmailAndPassword(email, senha).catch(() => {
+    err.style.display = "block";
+  });
+}
+function fazerLogout() { auth.signOut(); }
+document.getElementById("senha-input").addEventListener("keydown", e => { if (e.key === "Enter") fazerLogin(); });
+document.getElementById("email-input").addEventListener("keydown", e => { if (e.key === "Enter") fazerLogin(); });
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    inicializar();
+  } else {
+    document.getElementById("login-screen").style.display = "flex";
+    document.getElementById("app").style.display = "none";
+  }
+});
+
+// ── ESTADO ────────────────────────────────────────────────────────────────
+let todosProdutos   = [];
+let todasCategorias = [];
+let todosCupons     = [];
+let _arquivoSelecionado = null;
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+async function inicializar() { await Promise.all([carregarCategorias(), carregarProdutos(), carregarCupons(), carregarConfiguracoes(), carregarVendasHoje()]); }
+
+// ── TABS ──────────────────────────────────────────────────────────────────
+function mudarTab(tab, btn) {
+  document.querySelectorAll(".side-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("tab-" + tab).classList.add("active");
+  if (tab === "pdv") renderPdvGrid();
+  if (tab === "relatorio") {
+    const mesInput = document.getElementById("relatorio-mes");
+    if (!mesInput.value) mesInput.value = mesAtualStr();
+    carregarRelatorio();
+  }
+}
+
+function mesAtualStr() {
+  const hoje = new Date();
+  return hoje.getFullYear() + "-" + String(hoje.getMonth() + 1).padStart(2, "0");
+}
+
+// ── PRODUTOS ──────────────────────────────────────────────────────────────
+async function carregarProdutos() {
+  try {
+    const snap = await db.collection("produtos").orderBy("id").get();
+    todosProdutos = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    atualizarStats(); filtrar(); popularSelectCategorias(); renderPdvGrid();
+  } catch(e) { toast("Erro ao carregar produtos: " + e.message, "err"); }
+}
+
+function atualizarStats() {
+  document.getElementById("stat-total").textContent    = todosProdutos.length;
+  document.getElementById("stat-ativos").textContent   = todosProdutos.filter(p => p.ativo !== false).length;
+  document.getElementById("stat-destaque").textContent = todosProdutos.filter(p => p.destaque).length;
+  document.getElementById("stat-cats").textContent     = todasCategorias.length;
+  document.getElementById("topbar-count").textContent  = `${todosProdutos.length} produtos`;
+}
+
+function filtrar() {
+  const busca  = (document.getElementById("busca-input").value || "").toLowerCase();
+  const cat    = document.getElementById("filtro-cat").value;
+  const status = document.getElementById("filtro-status").value;
+  let lista = [...todosProdutos];
+  if (busca)  lista = lista.filter(p => p.nome.toLowerCase().includes(busca) || (p.descricao||"").toLowerCase().includes(busca));
+  if (cat)    lista = lista.filter(p => (p.categoria||"") === cat);
+  if (status === "ativo")    lista = lista.filter(p => p.ativo !== false);
+  if (status === "inativo")  lista = lista.filter(p => p.ativo === false);
+  if (status === "destaque") lista = lista.filter(p => p.destaque);
+  mostrarTabela(lista);
+}
+
+function mostrarTabela(lista) {
+  const tbody = document.getElementById("tabela-corpo");
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-box-open"></i><p>Nenhum produto encontrado.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = lista.map(p => `
+    <tr>
+      <td>${p.imagem ? `<img class="prod-img" src="${p.imagem}" alt="${p.nome}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ""}
+          <div class="prod-img-placeholder" ${p.imagem ? "style='display:none'" : ""}><i class="fa-solid fa-image"></i></div></td>
+      <td style="color:var(--muted);font-size:.8rem">${p.id || p.docId}</td>
+      <td style="max-width:220px"><strong>${p.nome}</strong>${p.descricao ? `<br><span style="color:var(--muted);font-size:.76rem">${p.descricao.substring(0,60)}${p.descricao.length>60?'…':''}</span>` : ''}</td>
+      <td><span style="font-size:.8rem;color:var(--muted)">${p.categoria || '–'}</span></td>
+      <td style="font-weight:700;color:var(--gold)">R$ ${Number(p.preco||0).toFixed(2).replace('.',',')}</td>
+      <td>${p.ativo !== false ? '<span class="badge badge-ativo">Ativo</span>' : '<span class="badge badge-inativo">Inativo</span>'}${p.destaque ? ' <span class="badge badge-destaque">★ Destaque</span>' : ''}</td>
+      <td><div class="actions-cell">
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalEditar('${p.docId}')"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="confirmarExclusao('produto','${p.docId}','${p.nome.replace(/'/g,"\\'")}')"><i class="fa-solid fa-trash"></i></button>
+      </div></td>
+    </tr>`).join("");
+}
+
+function popularSelectCategorias() {
+  const selFiltro = document.getElementById("filtro-cat");
+  const selForm   = document.getElementById("form-categoria");
+  const cats = [...new Set([...todasCategorias.map(c => c.id), ...todosProdutos.map(p => p.categoria).filter(Boolean)])];
+  selFiltro.innerHTML = `<option value="">Todas categorias</option>` + cats.map(c => {
+    const nome = todasCategorias.find(x => x.id === c)?.nome || c;
+    return `<option value="${c}">${nome}</option>`;
+  }).join("");
+  selForm.innerHTML = `<option value="">Selecione...</option>` + cats.filter(c => c !== "all").map(c => {
+    const nome = todasCategorias.find(x => x.id === c)?.nome || c;
+    return `<option value="${c}">${nome}</option>`;
+  }).join("");
+}
+
+// ── UPLOAD DE IMAGEM ──────────────────────────────────────────────────────
+function alternarAbaImagem(aba) {
+  document.getElementById("img-url-area").style.display    = aba === "url"    ? "block" : "none";
+  document.getElementById("img-upload-area").style.display = aba === "upload" ? "block" : "none";
+  document.getElementById("tab-url").className    = "btn btn-sm " + (aba === "url"    ? "btn-primary" : "btn-ghost");
+  document.getElementById("tab-upload").className = "btn btn-sm " + (aba === "upload" ? "btn-primary" : "btn-ghost");
+  if (aba === "url") _arquivoSelecionado = null;
+}
+
+function resetarUpload() {
+  _arquivoSelecionado = null;
+  alternarAbaImagem("url");
+  document.getElementById("upload-preview").style.display      = "none";
+  document.getElementById("upload-progress-bar").style.display = "none";
+  document.getElementById("upload-progress-fill").style.width  = "0%";
+  document.getElementById("form-imagem-file").value            = "";
+  document.getElementById("upload-preview-img").src            = "";
+  document.getElementById("upload-filename").textContent       = "";
+}
+
+document.getElementById("form-imagem-file").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  _arquivoSelecionado = file;
+  document.getElementById("upload-filename").textContent = file.name;
+  document.getElementById("upload-preview").style.display = "block";
+  const reader = new FileReader();
+  reader.onload = (ev) => { document.getElementById("upload-preview-img").src = ev.target.result; };
+  reader.readAsDataURL(file);
+});
+
+// Redimensiona/comprime a imagem no navegador e retorna um data URL (base64),
+// que é salvo direto no Firestore — evita depender do Firebase Storage (CORS/regras).
+async function fazerUploadImagem(file, maxDim) {
+  const MAX_DIM = maxDim || 900;
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  const img = await new Promise((resolve, reject) => {
+    const i = new Image();
+    i.onload  = () => resolve(i);
+    i.onerror = reject;
+    i.src = dataUrl;
+  });
+  let { width, height } = img;
+  if (width > MAX_DIM || height > MAX_DIM) {
+    if (width > height) { height = Math.round(height * MAX_DIM / width); width = MAX_DIM; }
+    else { width = Math.round(width * MAX_DIM / height); height = MAX_DIM; }
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width  = width;
+  canvas.height = height;
+  canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+  return canvas.toDataURL("image/jpeg", 0.75);
+}
+
+// ── UPLOAD DO BANNER (CONFIGURAÇÕES) ─────────────────────────────────────
+let _bannerArquivoSelecionado = null;
+
+function alternarAbaImagemBanner(aba) {
+  document.getElementById("config-banner-url-area").style.display    = aba === "url"    ? "block" : "none";
+  document.getElementById("config-banner-upload-area").style.display = aba === "upload" ? "block" : "none";
+  document.getElementById("config-tab-banner-url").className    = "btn btn-sm " + (aba === "url"    ? "btn-primary" : "btn-ghost");
+  document.getElementById("config-tab-banner-upload").className = "btn btn-sm " + (aba === "upload" ? "btn-primary" : "btn-ghost");
+  if (aba === "url") _bannerArquivoSelecionado = null;
+}
+
+document.getElementById("config-banner-imagem-file").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  _bannerArquivoSelecionado = file;
+  document.getElementById("config-banner-upload-filename").textContent = file.name;
+  document.getElementById("config-banner-upload-preview").style.display = "block";
+  const reader = new FileReader();
+  reader.onload = (ev) => { document.getElementById("config-banner-upload-preview-img").src = ev.target.result; };
+  reader.readAsDataURL(file);
+});
+
+// ── CRUD PRODUTOS ─────────────────────────────────────────────────────────
+function abrirModalCriar() {
+  document.getElementById("modal-titulo").innerHTML = '<i class="fa-solid fa-plus"></i> Novo Produto';
+  document.getElementById("form-id").value       = "";
+  document.getElementById("form-nome").value     = "";
+  document.getElementById("form-categoria").value= "";
+  document.getElementById("form-preco").value    = "";
+  document.getElementById("form-imagem").value   = "";
+  document.getElementById("form-descricao").value= "";
+  document.getElementById("form-ativo").checked  = true;
+  document.getElementById("form-destaque").checked = false;
+  resetarUpload();
+  abrirModal("modal-produto");
+}
+
+function abrirModalEditar(docId) {
+  const p = todosProdutos.find(x => x.docId === docId);
+  if (!p) return;
+  document.getElementById("modal-titulo").innerHTML  = '<i class="fa-solid fa-pen"></i> Editar Produto';
+  document.getElementById("form-id").value           = docId;
+  document.getElementById("form-nome").value         = p.nome || "";
+  document.getElementById("form-preco").value        = p.preco || "";
+  document.getElementById("form-imagem").value       = p.imagem || "";
+  document.getElementById("form-descricao").value    = p.descricao || "";
+  document.getElementById("form-ativo").checked      = p.ativo !== false;
+  document.getElementById("form-destaque").checked   = !!p.destaque;
+  setTimeout(() => { document.getElementById("form-categoria").value = p.categoria || ""; }, 0);
+  resetarUpload();
+  abrirModal("modal-produto");
+}
+
+async function salvarProduto() {
+  const docId     = document.getElementById("form-id").value;
+  const nome      = document.getElementById("form-nome").value.trim();
+  const categoria = document.getElementById("form-categoria").value;
+  const preco     = parseFloat(document.getElementById("form-preco").value);
+  const descricao = document.getElementById("form-descricao").value.trim();
+  const ativo     = document.getElementById("form-ativo").checked;
+  const destaque  = document.getElementById("form-destaque").checked;
+
+  if (!nome || !categoria || isNaN(preco)) { toast("Preencha nome, categoria e preço.", "err"); return; }
+
+  // Resolve imagem: upload tem prioridade sobre URL
+  let imagem = document.getElementById("form-imagem").value.trim();
+  if (_arquivoSelecionado) {
+    try {
+      imagem = await fazerUploadImagem(_arquivoSelecionado);
+    } catch(e) {
+      toast("Erro ao processar a imagem: " + e.message, "err");
+      return;
+    }
+  }
+
+  const dados = { nome, categoria, preco, imagem, descricao, ativo, destaque };
+  try {
+    if (docId) {
+      await db.collection("produtos").doc(docId).update(dados);
+      toast("Produto atualizado!", "ok");
+    } else {
+      const maxId = todosProdutos.length ? Math.max(...todosProdutos.map(p => Number(p.id)||0)) : 0;
+      await db.collection("produtos").doc(String(maxId + 1)).set({
+        ...dados, id: maxId + 1,
+        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      toast("Produto criado!", "ok");
+    }
+    fecharModal("modal-produto");
+    await carregarProdutos();
+  } catch(e) { toast("Erro: " + e.message, "err"); }
+}
+
+// ── CATEGORIAS ────────────────────────────────────────────────────────────
+async function carregarCategorias() {
+  try {
+    const snap = await db.collection("categorias").get();
+    todasCategorias = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    renderizarCategorias();
+  } catch(e) { toast("Erro ao carregar categorias: " + e.message, "err"); }
+}
+
+function renderizarCategorias() {
+  const grid = document.getElementById("cat-grid");
+  if (!todasCategorias.length) {
+    grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-tags"></i><p>Nenhuma categoria cadastrada.</p></div>`;
+    return;
+  }
+  grid.innerHTML = todasCategorias.map(c => `
+    <div class="cat-card">
+      <div class="cat-card-left">
+        <div class="cat-icon"><i class="fa-solid ${c.icone || 'fa-tag'}"></i></div>
+        <div><div class="cat-name">${c.nome}</div><div class="cat-id">${c.id || c.docId}</div></div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalCategoriaEditar('${c.docId}')"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="confirmarExclusao('categoria','${c.docId}','${(c.nome||'').replace(/'/g,"\\'")}')"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>`).join("");
+}
+
+function abrirModalCategoria() {
+  document.getElementById("cat-id-original").value = "";
+  document.getElementById("cat-nome").value  = "";
+  document.getElementById("cat-id").value    = "";
+  document.getElementById("cat-icone").value = "";
+  abrirModal("modal-categoria");
+}
+
+function abrirModalCategoriaEditar(docId) {
+  const c = todasCategorias.find(x => x.docId === docId);
+  if (!c) return;
+  document.getElementById("cat-id-original").value = docId;
+  document.getElementById("cat-nome").value  = c.nome || "";
+  document.getElementById("cat-id").value    = c.id || c.docId || "";
+  document.getElementById("cat-icone").value = c.icone || "";
+  abrirModal("modal-categoria");
+}
+
+async function salvarCategoria() {
+  const docIdOriginal = document.getElementById("cat-id-original").value;
+  const nome  = document.getElementById("cat-nome").value.trim();
+  const id    = document.getElementById("cat-id").value.trim().replace(/\s+/g, "");
+  const icone = document.getElementById("cat-icone").value.trim() || "fa-tag";
+  if (!nome || !id) { toast("Preencha nome e ID.", "err"); return; }
+  try {
+    if (docIdOriginal) {
+      await db.collection("categorias").doc(docIdOriginal).update({ nome, id, icone });
+    } else {
+      await db.collection("categorias").doc(id).set({ nome, id, icone });
+    }
+    toast("Categoria salva!", "ok");
+    fecharModal("modal-categoria");
+    await carregarCategorias();
+    popularSelectCategorias();
+  } catch(e) { toast("Erro: " + e.message, "err"); }
+}
+
+// ── CUPONS ────────────────────────────────────────────────────────────────
+async function carregarCupons() {
+  try {
+    const snap = await db.collection("cupons").get();
+    todosCupons = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    renderizarCupons();
+  } catch(e) { toast("Erro ao carregar cupons: " + e.message, "err"); }
+}
+
+function renderizarCupons() {
+  const tbody = document.getElementById("cupons-tabela-corpo");
+  if (!todosCupons.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-ticket"></i><p>Nenhum cupom cadastrado.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = todosCupons.map(c => {
+    const valorFmt    = c.tipo === "fixo" ? `R$ ${Number(c.valor||0).toFixed(2).replace('.',',')}` : `${Number(c.valor||0)}%`;
+    const minimoFmt    = c.valorMinimo ? `R$ ${Number(c.valorMinimo).toFixed(2).replace('.',',')}` : '–';
+    const validadeFmt  = c.validade ? new Date(c.validade + "T00:00:00").toLocaleDateString('pt-BR') : '–';
+    return `
+    <tr>
+      <td><strong>${c.codigo}</strong></td>
+      <td>${c.tipo === "fixo" ? "Valor fixo" : "Percentual"}</td>
+      <td style="font-weight:700;color:var(--gold)">${valorFmt}</td>
+      <td>${minimoFmt}</td>
+      <td>${validadeFmt}</td>
+      <td>${c.ativo !== false ? '<span class="badge badge-ativo">Ativo</span>' : '<span class="badge badge-inativo">Inativo</span>'}</td>
+      <td><div class="actions-cell">
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalCupomEditar('${c.docId}')"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="confirmarExclusao('cupom','${c.docId}','${(c.codigo||'').replace(/'/g,"\\'")}')"><i class="fa-solid fa-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join("");
+}
+
+function abrirModalCupom() {
+  document.getElementById("cupom-modal-titulo").innerHTML = '<i class="fa-solid fa-plus"></i> Novo Cupom';
+  document.getElementById("cupom-doc-id").value        = "";
+  document.getElementById("cupom-codigo").value        = "";
+  document.getElementById("cupom-tipo").value          = "percentual";
+  document.getElementById("cupom-valor").value         = "";
+  document.getElementById("cupom-valor-minimo").value  = "";
+  document.getElementById("cupom-validade").value      = "";
+  document.getElementById("cupom-ativo").checked       = true;
+  abrirModal("modal-cupom");
+}
+
+function abrirModalCupomEditar(docId) {
+  const c = todosCupons.find(x => x.docId === docId);
+  if (!c) return;
+  document.getElementById("cupom-modal-titulo").innerHTML = '<i class="fa-solid fa-pen"></i> Editar Cupom';
+  document.getElementById("cupom-doc-id").value        = docId;
+  document.getElementById("cupom-codigo").value        = c.codigo || "";
+  document.getElementById("cupom-tipo").value          = c.tipo || "percentual";
+  document.getElementById("cupom-valor").value         = c.valor ?? "";
+  document.getElementById("cupom-valor-minimo").value  = c.valorMinimo ?? "";
+  document.getElementById("cupom-validade").value      = c.validade || "";
+  document.getElementById("cupom-ativo").checked       = c.ativo !== false;
+  abrirModal("modal-cupom");
+}
+
+async function salvarCupom() {
+  const docId          = document.getElementById("cupom-doc-id").value;
+  const codigo         = document.getElementById("cupom-codigo").value.trim().toUpperCase();
+  const tipo           = document.getElementById("cupom-tipo").value;
+  const valor          = parseFloat(document.getElementById("cupom-valor").value);
+  const valorMinimoRaw = document.getElementById("cupom-valor-minimo").value;
+  const valorMinimo    = valorMinimoRaw ? parseFloat(valorMinimoRaw) : 0;
+  const validade       = document.getElementById("cupom-validade").value || null;
+  const ativo          = document.getElementById("cupom-ativo").checked;
+
+  if (!codigo || isNaN(valor)) { toast("Preencha código e valor.", "err"); return; }
+  if (tipo === "percentual" && valor > 100) { toast("O percentual não pode ser maior que 100.", "err"); return; }
+
+  const jaExiste = todosCupons.find(c => c.codigo === codigo && c.docId !== docId);
+  if (jaExiste) { toast("Já existe um cupom com esse código.", "err"); return; }
+
+  const dados = { codigo, tipo, valor, valorMinimo, validade, ativo };
+  try {
+    if (docId) {
+      await db.collection("cupons").doc(docId).update(dados);
+      toast("Cupom atualizado!", "ok");
+    } else {
+      await db.collection("cupons").add(dados);
+      toast("Cupom criado!", "ok");
+    }
+    fecharModal("modal-cupom");
+    await carregarCupons();
+  } catch(e) { toast("Erro: " + e.message, "err"); }
+}
+
+// ── EXCLUSÃO ──────────────────────────────────────────────────────────────
+function confirmarExclusao(tipo, docId, nome) {
+  document.getElementById("confirm-msg").textContent = `Excluir "${nome}"? Esta ação não pode ser desfeita.`;
+  document.getElementById("confirm-ok-btn").onclick = async () => {
+    try {
+      if (tipo === "produto") { await db.collection("produtos").doc(docId).delete(); await carregarProdutos(); }
+      else if (tipo === "cupom") { await db.collection("cupons").doc(docId).delete(); await carregarCupons(); }
+      else { await db.collection("categorias").doc(docId).delete(); await carregarCategorias(); popularSelectCategorias(); }
+      toast("Excluído com sucesso.", "ok");
+      fecharModal("confirm-modal");
+    } catch(e) { toast("Erro: " + e.message, "err"); }
+  };
+  abrirModal("confirm-modal");
+}
+
+// ── PDV ───────────────────────────────────────────────────────────────────
+let pdvCarrinho = [];       // [{ docId, nome, preco, qtd }]
+let pdvCupomAplicado = null;
+let vendasHoje = [];
+let vendasRelatorio = [];
+
+function renderPdvGrid() {
+  const grid = document.getElementById("pdv-grid");
+  const busca = (document.getElementById("pdv-busca")?.value || "").toLowerCase();
+  let lista = todosProdutos.filter(p => p.ativo !== false);
+  if (busca) lista = lista.filter(p => p.nome.toLowerCase().includes(busca));
+  if (!lista.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-box-open"></i><p>Nenhum produto encontrado.</p></div>`;
+    return;
+  }
+  grid.innerHTML = lista.map(p => `
+    <div class="pdv-item" onclick="pdvAdicionarItem('${p.docId}')">
+      ${p.imagem ? `<img src="${p.imagem}" alt="${p.nome}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ""}
+      <div class="pdv-item-noimg" ${p.imagem ? "style='display:none'" : ""}><i class="fa-solid fa-image"></i></div>
+      <div class="pdv-item-nome">${p.nome}</div>
+      <div class="pdv-item-preco">R$ ${Number(p.preco||0).toFixed(2).replace('.',',')}</div>
+    </div>`).join("");
+}
+
+function pdvAdicionarItem(docId) {
+  const p = todosProdutos.find(x => x.docId === docId);
+  if (!p) return;
+  const item = pdvCarrinho.find(i => i.docId === docId);
+  if (item) item.qtd += 1;
+  else pdvCarrinho.push({ docId, nome: p.nome, preco: Number(p.preco||0), qtd: 1 });
+  renderPdvCart();
+}
+
+function pdvAlterarQtd(docId, delta) {
+  const item = pdvCarrinho.find(i => i.docId === docId);
+  if (!item) return;
+  item.qtd += delta;
+  if (item.qtd <= 0) pdvCarrinho = pdvCarrinho.filter(i => i.docId !== docId);
+  renderPdvCart();
+}
+
+function pdvRemoverItem(docId) {
+  pdvCarrinho = pdvCarrinho.filter(i => i.docId !== docId);
+  renderPdvCart();
+}
+
+function pdvLimparCarrinho() {
+  pdvCarrinho = [];
+  pdvCupomAplicado = null;
+  document.getElementById("pdv-cupom-input").value = "";
+  document.getElementById("pdv-desconto-manual").value = "";
+  document.getElementById("pdv-cliente").value = "";
+  document.getElementById("pdv-pagamento-dividir").checked = false;
+  document.getElementById("pdv-valor-pagamento2").value = "";
+  pdvTogglePagamentoDividido();
+  renderPdvCart();
+}
+
+function pdvTogglePagamentoDividido() {
+  const dividir = document.getElementById("pdv-pagamento-dividir").checked;
+  document.getElementById("pdv-pagamento2-area").style.display = dividir ? "flex" : "none";
+  renderPdvCart();
+}
+
+function pdvCalcularSubtotal() {
+  return pdvCarrinho.reduce((s, i) => s + i.preco * i.qtd, 0);
+}
+
+function pdvCalcularDesconto(subtotal) {
+  const manual = parseFloat(document.getElementById("pdv-desconto-manual").value) || 0;
+  let descontoCupom = 0;
+  if (pdvCupomAplicado) {
+    descontoCupom = pdvCupomAplicado.tipo === "fixo"
+      ? Number(pdvCupomAplicado.valor || 0)
+      : subtotal * (Number(pdvCupomAplicado.valor || 0) / 100);
+  }
+  return Math.min(subtotal, manual + descontoCupom);
+}
+
+const PAG_LABEL = { dinheiro: "Dinheiro", pix: "Pix", debito: "Débito", credito: "Crédito" };
+
+function pdvCalcularPagamentos(total) {
+  const dividir = document.getElementById("pdv-pagamento-dividir").checked;
+  const forma1  = document.getElementById("pdv-pagamento").value;
+  if (!dividir) return [{ forma: forma1, valor: total }];
+  const forma2 = document.getElementById("pdv-pagamento2").value;
+  let valor2   = parseFloat(document.getElementById("pdv-valor-pagamento2").value) || 0;
+  valor2 = Math.max(0, Math.min(valor2, total));
+  const valor1 = total - valor2;
+  return [{ forma: forma1, valor: valor1 }, { forma: forma2, valor: valor2 }];
+}
+
+function renderPdvCart() {
+  const cont = document.getElementById("pdv-cart-items");
+  if (!pdvCarrinho.length) {
+    cont.innerHTML = `<div class="pdv-cart-empty">Carrinho vazio. Clique em um produto para adicionar.</div>`;
+  } else {
+    cont.innerHTML = pdvCarrinho.map(i => `
+      <div class="pdv-cart-item">
+        <div class="pdv-cart-item-info">
+          <div class="pdv-cart-item-nome">${i.nome}</div>
+          <div class="pdv-cart-item-preco">R$ ${i.preco.toFixed(2).replace('.',',')} un.</div>
+        </div>
+        <div class="pdv-qty">
+          <button class="pdv-qty-btn" onclick="pdvAlterarQtd('${i.docId}',-1)">−</button>
+          <span>${i.qtd}</span>
+          <button class="pdv-qty-btn" onclick="pdvAlterarQtd('${i.docId}',1)">+</button>
+        </div>
+        <div class="pdv-cart-item-total">R$ ${(i.preco*i.qtd).toFixed(2).replace('.',',')}</div>
+        <button class="pdv-remove-btn" onclick="pdvRemoverItem('${i.docId}')"><i class="fa-solid fa-trash"></i></button>
+      </div>`).join("");
+  }
+  const subtotal  = pdvCalcularSubtotal();
+  const desconto  = pdvCalcularDesconto(subtotal);
+  const total     = subtotal - desconto;
+  document.getElementById("pdv-subtotal").textContent      = "R$ " + subtotal.toFixed(2).replace('.',',');
+  document.getElementById("pdv-desconto-total").textContent= "R$ " + desconto.toFixed(2).replace('.',',');
+  document.getElementById("pdv-total").textContent         = "R$ " + total.toFixed(2).replace('.',',');
+
+  const resumo = document.getElementById("pdv-split-resumo");
+  if (document.getElementById("pdv-pagamento-dividir").checked) {
+    const pags = pdvCalcularPagamentos(total);
+    resumo.style.display = "flex";
+    resumo.innerHTML = pags.map(p => `
+      <div class="pdv-totals-row"><span>${PAG_LABEL[p.forma] || p.forma}</span><span>R$ ${p.valor.toFixed(2).replace('.',',')}</span></div>
+    `).join("");
+  } else {
+    resumo.style.display = "none";
+    resumo.innerHTML = "";
+  }
+}
+
+function pdvAplicarCupom() {
+  const codigo = document.getElementById("pdv-cupom-input").value.trim().toUpperCase();
+  if (!codigo) return;
+  const cupom = todosCupons.find(c => c.codigo === codigo && c.ativo !== false);
+  if (!cupom) { toast("Cupom inválido ou inativo.", "err"); return; }
+  const subtotal = pdvCalcularSubtotal();
+  if (cupom.valorMinimo && subtotal < cupom.valorMinimo) {
+    toast(`Pedido mínimo para este cupom: R$ ${Number(cupom.valorMinimo).toFixed(2).replace('.',',')}`, "err");
+    return;
+  }
+  pdvCupomAplicado = cupom;
+  toast("Cupom aplicado!", "ok");
+  renderPdvCart();
+}
+
+async function pdvFinalizarVenda() {
+  if (!pdvCarrinho.length) { toast("Adicione ao menos um produto ao carrinho.", "err"); return; }
+  const subtotal   = pdvCalcularSubtotal();
+  const desconto   = pdvCalcularDesconto(subtotal);
+  const total      = subtotal - desconto;
+  const pagamentos = pdvCalcularPagamentos(total);
+  const cliente    = document.getElementById("pdv-cliente").value.trim();
+
+  if (pagamentos.length > 1 && (pagamentos[0].valor <= 0 || pagamentos[1].valor <= 0)) {
+    toast("Informe um valor válido para a 2ª forma de pagamento (menor que o total).", "err");
+    return;
+  }
+
+  const venda = {
+    itens: pdvCarrinho.map(i => ({ nome: i.nome, preco: i.preco, qtd: i.qtd })),
+    subtotal, desconto, total,
+    pagamentos,
+    pagamento: pagamentos.map(p => PAG_LABEL[p.forma] || p.forma).join(" + "),
+    cliente: cliente || null,
+    cupom: pdvCupomAplicado ? pdvCupomAplicado.codigo : null,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+    await db.collection("vendas").add(venda);
+    toast("Venda finalizada com sucesso!", "ok");
+    pdvLimparCarrinho();
+    await carregarVendasHoje();
+  } catch(e) { toast("Erro ao finalizar venda: " + e.message, "err"); }
+}
+
+async function carregarVendasHoje() {
+  try {
+    const inicioHoje = new Date();
+    inicioHoje.setHours(0,0,0,0);
+    const snap = await db.collection("vendas")
+      .where("criadoEm", ">=", inicioHoje)
+      .orderBy("criadoEm", "desc")
+      .get();
+    vendasHoje = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    renderVendasHoje();
+  } catch(e) {
+    document.getElementById("pdv-vendas-tabela").innerHTML =
+      `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Erro ao carregar vendas: ${e.message}</p></div></td></tr>`;
+  }
+}
+
+function linhaVenda(v, origem, comData) {
+  const dt = v.criadoEm?.toDate ? v.criadoEm.toDate() : null;
+  const hora = dt ? dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '–';
+  const data = dt ? dt.toLocaleDateString('pt-BR') : '–';
+  const itensResumo = (v.itens||[]).map(i => `${i.qtd}x ${i.nome}`).join(", ");
+  const pagamentoTexto = Array.isArray(v.pagamentos)
+    ? v.pagamentos.map(p => `${PAG_LABEL[p.forma] || p.forma} (R$ ${Number(p.valor||0).toFixed(2).replace('.',',')})`).join(" + ")
+    : (PAG_LABEL[v.pagamento] || v.pagamento || '–');
+  return `
+    <tr>
+      ${comData ? `<td>${data}</td>` : ''}
+      <td>${hora}</td>
+      <td>${v.cliente || '–'}</td>
+      <td style="max-width:260px"><span style="font-size:.8rem;color:var(--muted)">${itensResumo}</span></td>
+      <td><span style="font-size:.8rem">${pagamentoTexto}</span></td>
+      <td style="font-weight:700;color:var(--gold)">R$ ${Number(v.total||0).toFixed(2).replace('.',',')}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="confirmarExclusaoVenda('${v.docId}','${origem}')" title="Excluir venda"><i class="fa-solid fa-trash"></i></button></td>
+    </tr>`;
+}
+
+function renderVendasHoje() {
+  const tbody = document.getElementById("pdv-vendas-tabela");
+  document.getElementById("pdv-stat-qtd").textContent = vendasHoje.length;
+  document.getElementById("pdv-stat-total").textContent =
+    "R$ " + vendasHoje.reduce((s,v) => s + Number(v.total||0), 0).toFixed(2).replace('.',',');
+  if (!vendasHoje.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-cash-register"></i><p>Nenhuma venda registrada hoje.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = vendasHoje.map(v => linhaVenda(v, "pdv", false)).join("");
+}
+
+function confirmarExclusaoVenda(docId, origem) {
+  document.getElementById("confirm-msg").textContent = "Excluir esta venda? Esta ação não pode ser desfeita.";
+  document.getElementById("confirm-ok-btn").onclick = async () => {
+    try {
+      await db.collection("vendas").doc(docId).delete();
+      toast("Venda excluída.", "ok");
+      fecharModal("confirm-modal");
+      // mantém PDV e Relatório sincronizados, já que ambos listam a mesma coleção "vendas"
+      await Promise.all([carregarVendasHoje(), carregarRelatorio()]);
+    } catch(e) { toast("Erro ao excluir venda: " + e.message, "err"); }
+  };
+  abrirModal("confirm-modal");
+}
+
+// ── RELATÓRIO ─────────────────────────────────────────────────────────────
+async function carregarRelatorio() {
+  try {
+    const mesStr = document.getElementById("relatorio-mes").value || mesAtualStr();
+    const [ano, mes] = mesStr.split("-").map(Number);
+    const inicio = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
+    const fim    = new Date(ano, mes, 1, 0, 0, 0, 0);
+    const snap = await db.collection("vendas")
+      .where("criadoEm", ">=", inicio)
+      .where("criadoEm", "<", fim)
+      .orderBy("criadoEm", "desc")
+      .get();
+    vendasRelatorio = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    renderRelatorio();
+  } catch(e) {
+    document.getElementById("relatorio-tabela").innerHTML =
+      `<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Erro ao carregar relatório: ${e.message}</p></div></td></tr>`;
+  }
+}
+
+function renderRelatorio() {
+  const totalMes = vendasRelatorio.reduce((s,v) => s + Number(v.total||0), 0);
+  document.getElementById("relatorio-stat-qtd").textContent   = vendasRelatorio.length;
+  document.getElementById("relatorio-stat-total").textContent = "R$ " + totalMes.toFixed(2).replace('.',',');
+  document.getElementById("relatorio-stat-ticket").textContent= "R$ " + (vendasRelatorio.length ? totalMes / vendasRelatorio.length : 0).toFixed(2).replace('.',',');
+
+  const tbody = document.getElementById("relatorio-tabela");
+  if (!vendasRelatorio.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-chart-column"></i><p>Nenhuma venda encontrada neste período.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = vendasRelatorio.map(v => linhaVenda(v, "relatorio", true)).join("");
+}
+
+// ── CONFIGURAÇÕES ─────────────────────────────────────────────────────────
+const CONFIG_PADRAO = {
+  nomeLoja: "RA Modas",
+  whatsapp: "558182362638",
+  retiradaDias: [0,1,2,3,4,5,6],
+  retiradaHoraInicio: "08:00",
+  retiradaHoraFim: "18:00",
+  retiradaIntervalo: 60,
+  bannerUrl: "",
+  corPrimaria: "#D6336C",
+  corSecundaria: "#4A154B",
+  corDestaque: "#FF8FB3"
+};
+
+async function carregarConfiguracoes() {
+  try {
+    const doc = await db.collection("configuracoes").doc("geral").get();
+    const cfg = doc.exists ? { ...CONFIG_PADRAO, ...doc.data() } : CONFIG_PADRAO;
+    document.getElementById("config-nome-loja").value  = cfg.nomeLoja;
+    document.getElementById("config-whatsapp").value   = cfg.whatsapp;
+    document.getElementById("config-hora-inicio").value = cfg.retiradaHoraInicio;
+    document.getElementById("config-hora-fim").value    = cfg.retiradaHoraFim;
+    document.getElementById("config-intervalo").value   = cfg.retiradaIntervalo;
+    for (let i = 0; i <= 6; i++) {
+      document.getElementById("config-dia-" + i).checked = cfg.retiradaDias.includes(i);
+    }
+    document.getElementById("config-banner-imagem").value = cfg.bannerUrl || "";
+    const previewAtual = document.getElementById("config-banner-preview-atual");
+    if (cfg.bannerUrl) { previewAtual.src = cfg.bannerUrl; previewAtual.style.display = "block"; }
+    else { previewAtual.style.display = "none"; }
+    document.getElementById("config-cor-primaria").value   = cfg.corPrimaria;
+    document.getElementById("config-cor-secundaria").value = cfg.corSecundaria;
+    document.getElementById("config-cor-destaque").value   = cfg.corDestaque;
+    resetarUploadBanner();
+  } catch(e) { toast("Erro ao carregar configurações: " + e.message, "err"); }
+}
+
+function resetarUploadBanner() {
+  _bannerArquivoSelecionado = null;
+  alternarAbaImagemBanner("url");
+  document.getElementById("config-banner-upload-preview").style.display = "none";
+  document.getElementById("config-banner-imagem-file").value             = "";
+  document.getElementById("config-banner-upload-preview-img").src        = "";
+  document.getElementById("config-banner-upload-filename").textContent   = "";
+}
+
+async function salvarConfiguracoes() {
+  const nomeLoja  = document.getElementById("config-nome-loja").value.trim();
+  const whatsapp  = document.getElementById("config-whatsapp").value.trim().replace(/\D/g, "");
+  const horaInicio = document.getElementById("config-hora-inicio").value;
+  const horaFim    = document.getElementById("config-hora-fim").value;
+  const intervalo  = parseInt(document.getElementById("config-intervalo").value, 10) || 60;
+  const retiradaDias = [];
+  for (let i = 0; i <= 6; i++) {
+    if (document.getElementById("config-dia-" + i).checked) retiradaDias.push(i);
+  }
+  const corPrimaria   = document.getElementById("config-cor-primaria").value;
+  const corSecundaria = document.getElementById("config-cor-secundaria").value;
+  const corDestaque   = document.getElementById("config-cor-destaque").value;
+
+  if (!nomeLoja || !whatsapp) { toast("Preencha nome da loja e WhatsApp.", "err"); return; }
+  if (!horaInicio || !horaFim || horaInicio >= horaFim) { toast("Verifique o horário de início e fim da retirada.", "err"); return; }
+  if (!retiradaDias.length) { toast("Selecione ao menos um dia para retirada.", "err"); return; }
+
+  // Resolve banner: upload tem prioridade sobre URL
+  let bannerUrl = document.getElementById("config-banner-imagem").value.trim();
+  if (_bannerArquivoSelecionado) {
+    try {
+      bannerUrl = await fazerUploadImagem(_bannerArquivoSelecionado, 1600);
+    } catch(e) {
+      toast("Erro ao processar o banner: " + e.message, "err");
+      return;
+    }
+  }
+
+  try {
+    await db.collection("configuracoes").doc("geral").set({
+      nomeLoja, whatsapp, retiradaDias,
+      retiradaHoraInicio: horaInicio,
+      retiradaHoraFim: horaFim,
+      retiradaIntervalo: intervalo,
+      bannerUrl, corPrimaria, corSecundaria, corDestaque
+    });
+    toast("Configurações salvas!", "ok");
+    await carregarConfiguracoes();
+  } catch(e) { toast("Erro: " + e.message, "err"); }
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────────────
+function abrirModal(id)  { document.getElementById(id).classList.add("show"); }
+function fecharModal(id) { document.getElementById(id).classList.remove("show"); }
+document.querySelectorAll(".modal-overlay").forEach(o => {
+  o.addEventListener("click", e => { if (e.target === o) fecharModal(o.id); });
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.querySelectorAll(".modal-overlay.show").forEach(o => fecharModal(o.id));
+});
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+let _toastTimer;
+function toast(msg, tipo = "ok") {
+  const el = document.getElementById("toast");
+  el.textContent = tipo === "ok" ? "✔ " + msg : "✘ " + msg;
+  el.className = "show " + tipo;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.className = "", 3200);
+}
+
+// ── AUTO-INIT ─────────────────────────────────────────────────────────────
+if (sessionStorage.getItem("admin_ok") === "1") inicializar();
+</script>
+</body>
+</html>
