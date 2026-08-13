@@ -12,6 +12,9 @@
     #btn { padding: 14px 36px; background: #f0c040; color: #000; font-size: 1rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: opacity .2s; }
     #btn:disabled { opacity: .45; cursor: not-allowed; }
     #log  { margin-top: 24px; width: 100%; max-width: 540px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 16px; font-size: .8rem; font-family: monospace; max-height: 360px; overflow-y: auto; }
+    #login-box { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 320px; margin-bottom: 20px; }
+    #login-box input { padding: 12px; border-radius: 6px; border: 1px solid #333; background: #1a1a1a; color: #eee; font-size: .9rem; }
+    #login-error { color: #f44336; font-size: .8rem; display: none; }
     .ok   { color: #4caf50; }
     .err  { color: #f44336; }
     .info { color: #90caf9; }
@@ -20,14 +23,22 @@
 <body>
 
 <h1>🔥 Seed de Produtos – RA Modas</h1>
-<p>Clique no botão abaixo para enviar todos os produtos, categorias e o cupom padrão ao Firestore do Firebase. Execute <strong>apenas uma vez</strong>. Se rodar novamente, usará <code>set</code> com o mesmo ID (não duplica).</p>
+<p>Faça login com o usuário admin (mesmo usado no <code>admin.html</code>) e clique no botão para enviar todos os produtos, categorias e o cupom padrão ao Firestore do Firebase. Execute <strong>apenas uma vez</strong>. Se rodar novamente, usará <code>set</code> com o mesmo ID (não duplica).</p>
 
-<button id="btn">🚀 Enviar Produtos ao Firebase</button>
+<div id="login-box">
+  <input type="email" id="email-input" placeholder="E-mail do admin">
+  <input type="password" id="senha-input" placeholder="Senha">
+  <button id="login-btn">🔐 Entrar</button>
+  <span id="login-error">E-mail ou senha inválidos.</span>
+</div>
 
-<div id="log"><span class="info">Aguardando…</span></div>
+<button id="btn" disabled>🚀 Enviar Produtos ao Firebase</button>
+
+<div id="log"><span class="info">Faça login para habilitar o envio.</span></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 <script>
 // TODO: preencher com as credenciais do Firebase deste projeto
@@ -66,9 +77,13 @@ const cupons = [
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 const log = document.getElementById("log");
 const btn = document.getElementById("btn");
+const loginBtn = document.getElementById("login-btn");
+const loginBox = document.getElementById("login-box");
+const loginError = document.getElementById("login-error");
 
 const addLog = (msg, tipo = "ok") => {
   const span = document.createElement("span");
@@ -78,6 +93,27 @@ const addLog = (msg, tipo = "ok") => {
   log.appendChild(document.createElement("br"));
   log.scrollTop = log.scrollHeight;
 };
+
+loginBtn.addEventListener("click", () => {
+  const email = document.getElementById("email-input").value.trim();
+  const senha = document.getElementById("senha-input").value;
+  loginError.style.display = "none";
+  auth.signInWithEmailAndPassword(email, senha).catch(() => {
+    loginError.style.display = "block";
+  });
+});
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loginBox.style.display = "none";
+    btn.disabled = false;
+    log.innerHTML = "";
+    addLog(`✔ Logado como ${user.email}. Pronto para enviar.`, "ok");
+  } else {
+    loginBox.style.display = "flex";
+    btn.disabled = true;
+  }
+});
 
 btn.addEventListener("click", async () => {
   btn.disabled = true;

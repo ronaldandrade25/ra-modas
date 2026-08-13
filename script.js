@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const viewCartBannerBtn = document.querySelector(".view-cart-banner-btn");
 
     // Seletores para o sistema de filtro
-    const categoryBtns = document.querySelectorAll(".category-btn");
+    const categoriesBar = document.getElementById("categories-bar");
     const searchInput = document.querySelector(".search-input");
 
     // --- CARREGAR PRODUTOS DO FIREBASE ---
@@ -51,6 +51,34 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (e) {
         console.error("Erro ao carregar produtos do Firebase:", e);
     }
+
+    // --- CARREGAR CATEGORIAS DO FIREBASE ---
+    let categorias = [];
+    try {
+        const catSnap = await db.collection("categorias").get();
+        categorias = catSnap.docs.map(d => ({ ...d.data() }));
+    } catch (e) {
+        console.error("Erro ao carregar categorias do Firebase:", e);
+    }
+
+    const renderizarCategoriasBar = () => {
+        const botoesExtra = categorias
+            .map(
+                (c) => `
+                    <button class="category-btn" data-category="${c.id}">
+                        <i class="fa-solid ${c.icone || 'fa-tag'}"></i> ${c.nome}
+                    </button>
+                `,
+            )
+            .join("");
+        categoriesBar.innerHTML = `
+            <button class="category-btn active" data-category="all">
+                <i class="fa-solid fa-border-all"></i> Todos
+            </button>
+            ${botoesExtra}
+        `;
+    };
+    renderizarCategoriasBar();
 
     // --- CARREGAR CUPONS DO FIREBASE ---
     let coupons = [];
@@ -467,18 +495,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     finishOrderBtn.addEventListener("click", finalizarPedido);
     viewCartBannerBtn.addEventListener("click", abrirCarrinho);
 
-    // Event listener para botões de categoria
-    categoryBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-            // Remove classe active de todos os botões
-            categoryBtns.forEach((b) => b.classList.remove("active"));
-            // Adiciona classe active no botão clicado
-            btn.classList.add("active");
-            // Atualiza categoria ativa
-            categoriaAtiva = btn.dataset.category;
-            // Filtra e mostra produtos
-            filtrarEMostrarProdutos();
-        });
+    // Event listener para botões de categoria (delegação, pois são renderizados dinamicamente)
+    categoriesBar.addEventListener("click", (e) => {
+        const btn = e.target.closest(".category-btn");
+        if (!btn) return;
+        // Remove classe active de todos os botões
+        categoriesBar
+            .querySelectorAll(".category-btn")
+            .forEach((b) => b.classList.remove("active"));
+        // Adiciona classe active no botão clicado
+        btn.classList.add("active");
+        // Atualiza categoria ativa
+        categoriaAtiva = btn.dataset.category;
+        // Filtra e mostra produtos
+        filtrarEMostrarProdutos();
     });
 
     // Event listener para campo de busca

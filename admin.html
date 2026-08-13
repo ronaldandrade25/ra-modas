@@ -7,14 +7,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
-      --bg:      #0d0d0d;
-      --surface: #161616;
-      --card:    #1e1e1e;
-      --border:  #2a2a2a;
-      --gold:    #f0c040;
-      --gold2:   #c99a20;
-      --text:    #e8e8e8;
-      --muted:   #888;
+      --bg:      #ffffff;
+      --surface: #f2f6fa;
+      --card:    #ffffff;
+      --border:  #e1e8ef;
+      --gold:    #0d47a1;
+      --gold2:   #1565c0;
+      --text:    #182236;
+      --muted:   #64748b;
       --red:     #f44336;
       --green:   #4caf50;
       --blue:    #2196f3;
@@ -39,7 +39,7 @@
     .side-btn { display: flex; align-items: center; gap: 12px; text-align: left; background: none; border: none; color: var(--muted); padding: 12px 14px; border-radius: 8px; cursor: pointer; font-size: .88rem; transition: .2s; width: 100%; }
     .side-btn i { width: 18px; text-align: center; font-size: .95rem; }
     .side-btn:hover { background: var(--card); color: var(--text); }
-    .side-btn.active { background: #2a2205; color: var(--gold); font-weight: 600; }
+    .side-btn.active { background: #e3f0fb; color: var(--gold); font-weight: 600; }
     .content { padding: 24px; flex: 1; min-width: 0; }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
@@ -55,10 +55,10 @@
     .toolbar input:focus, .toolbar select:focus { border-color: var(--gold); }
     .toolbar select option { background: var(--card); }
     .btn { padding: 9px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: .88rem; font-weight: 600; transition: .15s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary  { background: var(--gold); color: #000; }
+    .btn-primary  { background: var(--gold); color: #fff; }
     .btn-primary:hover  { background: var(--gold2); }
-    .btn-danger   { background: #2a1010; color: var(--red); border: 1px solid #4a1010; }
-    .btn-danger:hover   { background: #3a1515; }
+    .btn-danger   { background: #fdecea; color: var(--red); border: 1px solid #f5c6c6; }
+    .btn-danger:hover   { background: #f9d4d4; }
     .btn-ghost    { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-ghost:hover    { border-color: var(--gold); color: var(--gold); }
     .btn-sm { padding: 5px 10px; font-size: .78rem; border-radius: 6px; }
@@ -71,15 +71,15 @@
     thead tr { background: var(--surface); }
     th { padding: 11px 14px; text-align: left; font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
     td { padding: 10px 14px; border-top: 1px solid var(--border); font-size: .85rem; vertical-align: middle; }
-    tr:hover td { background: #1a1a1a; }
+    tr:hover td { background: #f2f6fa; }
     .prod-img { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
     .prod-img-placeholder { width: 44px; height: 44px; background: var(--surface); border-radius: 6px; border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: .7rem; }
     .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: .72rem; font-weight: 600; }
-    .badge-ativo    { background: #0e2e18; color: var(--green); }
-    .badge-inativo  { background: #2a1010; color: var(--red); }
-    .badge-destaque { background: #2a1f00; color: var(--gold); }
+    .badge-ativo    { background: #e3f6e8; color: var(--green); }
+    .badge-inativo  { background: #fdecea; color: var(--red); }
+    .badge-destaque { background: #e3f0fb; color: var(--gold); }
     .actions-cell { display: flex; gap: 6px; }
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 200; align-items: center; justify-content: center; }
     .modal-overlay.show { display: flex; }
     .modal { background: var(--card); border: 1px solid var(--border); border-radius: 14px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; padding: 28px; position: relative; }
     .modal h2 { font-size: 1.1rem; margin-bottom: 20px; color: var(--gold); display: flex; align-items: center; gap: 8px; }
@@ -163,7 +163,7 @@
 
 <div id="login-screen">
   <div style="text-align:center">
-    <i class="fa-solid fa-shield-halved" style="font-size:2.2rem;color:var(--gold);margin-bottom:10px;display:block"></i>
+    <img src="./assets/ra-sistema-logo.jpeg" alt="RA Sistemas" style="width:150px;max-width:70vw;margin-bottom:14px;border-radius:8px;display:inline-block">
     <h1>RA Modas Admin</h1>
     <p style="margin-top:6px">Acesso restrito</p>
   </div>
@@ -480,7 +480,6 @@
     <div class="form-grid">
       <input type="hidden" id="cat-id-original">
       <div class="form-group full"><label>Nome da categoria *</label><input type="text" id="cat-nome" placeholder="Ex: Blusas"></div>
-      <div class="form-group full"><label>ID interno * <small style="color:var(--muted)">(sem espaços, ex: blusas)</small></label><input type="text" id="cat-id" placeholder="blusas"></div>
       <div class="form-group full"><label>Ícone Font Awesome <small style="color:var(--muted)">(ex: fa-shirt)</small></label><input type="text" id="cat-icone" placeholder="fa-tag"></div>
     </div>
     <div class="modal-footer">
@@ -852,10 +851,18 @@ function renderizarCategorias() {
     </div>`).join("");
 }
 
+function slugify(texto) {
+  return texto
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function abrirModalCategoria() {
   document.getElementById("cat-id-original").value = "";
   document.getElementById("cat-nome").value  = "";
-  document.getElementById("cat-id").value    = "";
   document.getElementById("cat-icone").value = "";
   abrirModal("modal-categoria");
 }
@@ -865,7 +872,6 @@ function abrirModalCategoriaEditar(docId) {
   if (!c) return;
   document.getElementById("cat-id-original").value = docId;
   document.getElementById("cat-nome").value  = c.nome || "";
-  document.getElementById("cat-id").value    = c.id || c.docId || "";
   document.getElementById("cat-icone").value = c.icone || "";
   abrirModal("modal-categoria");
 }
@@ -873,13 +879,15 @@ function abrirModalCategoriaEditar(docId) {
 async function salvarCategoria() {
   const docIdOriginal = document.getElementById("cat-id-original").value;
   const nome  = document.getElementById("cat-nome").value.trim();
-  const id    = document.getElementById("cat-id").value.trim().replace(/\s+/g, "");
   const icone = document.getElementById("cat-icone").value.trim() || "fa-tag";
-  if (!nome || !id) { toast("Preencha nome e ID.", "err"); return; }
+  if (!nome) { toast("Preencha o nome.", "err"); return; }
   try {
     if (docIdOriginal) {
+      const atual = todasCategorias.find(x => x.docId === docIdOriginal);
+      const id = atual?.id || docIdOriginal;
       await db.collection("categorias").doc(docIdOriginal).update({ nome, id, icone });
     } else {
+      const id = slugify(nome);
       await db.collection("categorias").doc(id).set({ nome, id, icone });
     }
     toast("Categoria salva!", "ok");
