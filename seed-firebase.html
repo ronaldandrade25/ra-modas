@@ -58,7 +58,7 @@ const produtos = [
   { id: 4, nome: "Calça Feminina Pantalona",               categoria: "calças",      preco: 120.00, imagem: "./assets/Calça-Feminina-Pantalona.png",  descricao: "Calça Feminina Pantalona Estampada Lunender" },
   { id: 5, nome: "Shorts Feminino",                        categoria: "shorts",      preco: 32.99,  imagem: "./assets/short-feminino.webp",          descricao: "Shorts Feminino Confortável e Estiloso" },
   { id: 6, nome: "Short Jeans Cintura Alta",                categoria: "shorts",      preco: 499,    imagem: "./assets/Short Jeans.jpeg",             descricao: "Short Jeans Bermuda Feminino Luxo Cintura Alta" },
-  { id: 7, nome: "Conjunto Brilhante",                      categoria: "acessórios", preco: 24.99,  imagem: "./assets/conjunto.jpeg",                descricao: "Fone com cancelamento de ruído" },
+  { id: 7, nome: "Conjunto Brilhante",                      categoria: "acessórios", preco: 24.99,  imagem: "./assets/Conjunto.jpeg",                descricao: "Conjunto Feminino Brilhante" },
   { id: 8, nome: "Tênis Feminino Branco Rose",              categoria: "calçados",   preco: 79.99,  imagem: "./assets/Tênis.webp",                   descricao: "Tênis Feminino Branco Rose" },
 ];
 
@@ -154,7 +154,7 @@ btn.addEventListener("click", async () => {
   addLog("▶ Enviando cupons...", "info");
   for (const c of cupons) {
     try {
-      await db.collection("cupons").add(c);
+      await db.collection("cupons").doc(c.codigo).set(c);
       addLog(`✔ Cupom: ${c.codigo}`, "ok");
     } catch (e) {
       addLog(`✘ Cupom: ${c.codigo} — ${e.message}`, "err");
